@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>安娜老师 - AI英语外教</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+  background: linear-gradient(180deg, #f0edff 0%, #ffffff 40%);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  color: #333;
+}
+
+/* 顶部栏 */
+.header {
+  background: linear-gradient(135deg, #7c6cc8 0%, #5b4b9a 100%);
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 2px 10px rgba(91, 75, 154, 0.2);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+.teacher-info { flex: 1; }
+.teacher-name {
+  color: white;
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+.teacher-status {
+  color: rgba(255,255,255,0.8);
+  font-size: 13px;
+}
+.voice-selector {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  max-width: 180px;
+}
+.voice-btn {
+  padding: 4px 10px;
+  border: 1px solid rgba(255,255,255,0.5);
+  border-radius: 12px;
+  background: rgba(255,255,255,0.1);
+  color: white;
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.voice-btn.active {
+  background: white;
+  color: #5b4b9a;
+  font-weight: 600;
+}
+
+/* 对话区域 */
+.chat-container {
+  flex: 1;
+  padding: 20px 16px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.message {
+  display: flex;
+  gap: 10px;
+  max-width: 85%;
+  animation: messageIn 0.3s ease;
+}
+@keyframes messageIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.message.teacher {
+  align-self: flex-start;
+}
+.message.student {
+  align-self: flex-end;
+  flex-direction: row-reverse;
+}
+
+.message-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+.message.teacher .message-avatar {
+  background: linear-gradient(135deg, #7c6cc8 0%, #5b4b9a 100%);
+}
+.message.student .message-avatar {
+  background: linear-gradient(135deg, #ff9a56 0%, #ff7b29 100%);
+}
+
+.message-bubble {
+  padding: 12px 16px;
+  border-radius: 18px;
+  font-size: 15px;
+  line-height: 1.5;
+  position: relative;
+  word-wrap: break-word;
+}
+.message.teacher .message-bubble {
+  background: white;
+  border-top-left-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  color: #333;
+}
+.message.student .message-bubble {
+  background: linear-gradient(135deg, #7c6cc8 0%, #5b4b9a 100%);
+  color: white;
+  border-top-right-radius: 6px;
+}
+
+.message-bubble .word {
+  font-size: 22px;
+  font-weight: 700;
+  color: #5b4b9a;
+  margin-bottom: 4px;
+  display: block;
+}
+.message.student .message-bubble .word {
+  color: white;
+}
+.message-bubble .phonetic {
+  color: #888;
+  font-size: 13px;
+  margin-bottom: 8px;
+  display: block;
+}
+.message-bubble .meaning {
+  color: #666;
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+.message-bubble .example {
+  background: #f8f6ff;
+  padding: 8px 12px;
+  border-radius: 10px;
+  font-size: 13px;
+  color: #555;
+  margin-top: 8px;
+  font-style: italic;
+}
+.message-bubble .example-zh {
+  font-size: 12px;
+  color: #999;
+  margin-top: 4px;
+}
+
+/* 选项按钮 */
+.options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+.option-btn {
+  padding: 10px 16px;
+  border: 2px solid #e8e8e8;
+  border-radius: 12px;
+  background: white;
+  font-size: 14px;
+  color: #555;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.option-btn:hover {
+  border-color: #7c6cc8;
+  color: #5b4b9a;
+  background: #f8f6ff;
+}
+.option-btn.correct {
+  background: #e8f5e9;
+  border-color: #4caf50;
+  color: #2e7d32;
+}
+.option-btn.wrong {
+  background: #ffebee;
+  border-color: #f44336;
+  color: #c62828;
+}
+
+/* 播放按钮 */
+.play-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  background: #f0edff;
+  border: none;
+  border-radius: 8px;
+  color: #5b4b9a;
+  font-size: 13px;
+  cursor: pointer;
+  margin-top: 8px;
+}
+.play-btn:hover {
+  background: #e8e4ff;
+}
+
+/* 底部输入区 */
+.input-area {
+  padding: 12px 16px;
+  background: white;
+  border-top: 1px solid #eee;
+  display: flex;
+  gap: 10px;
+  align-items: flex-end;
+  position: sticky;
+  bottom: 0;
+}
+.input-box {
+  flex: 1;
+  padding: 12px 16px;
+  border: 2px solid #e8e8e8;
+  border-radius: 24px;
+  font-size: 15px;
+  outline: none;
+  transition: border-color 0.2s;
+  resize: none;
+  max-height: 120px;
+  min-height: 48px;
+  font-family: inherit;
+}
+.input-box:focus {
+  border-color: #7c6cc8;
+}
+.send-btn {
+  width: 48px;
+  height: 48px;
+  border: none;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #7c6cc8 0%, #5b4b9a 100%);
+  color: white;
+  font-size: 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: transform 0.2s;
+}
+.send-btn:hover {
+  transform: scale(1.05);
+}
+.send-btn:active {
+  transform: scale(0.95);
+}
+.send-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* 正在输入提示 */
+.typing-indicator {
+  display: flex;
+  gap: 4px;
+  padding: 8px 0;
+}
+.typing-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ccc;
+  animation: typing 1.4s infinite;
+}
+.typing-dot:nth-child(2) { animation-delay: 0.2s; }
+.typing-dot:nth-child(3) { animation-delay: 0.4s; }
+@keyframes typing {
+  0%, 60%, 100% { transform: translateY(0); background: #ccc; }
+  30% { transform: translateY(-6px); background: #7c6cc8; }
+}
+
+/* 学习进度 */
+.progress-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: #eee;
+  z-index: 101;
+}
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #7c6cc8, #ff7b29);
+  transition: width 0.5s ease;
+}
+
+/* 统计卡片 */
+.summary-card {
+  background: linear-gradient(135deg, #7c6cc8 0%, #5b4b9a 100%);
+  color: white;
+  padding: 24px;
+  border-radius: 20px;
+  text-align: center;
+  margin: 10px 0;
+}
+.summary-card h2 {
+  font-size: 20px;
+  margin-bottom: 16px;
+}
+.summary-stats {
+  display: flex;
+  justify-content: space-around;
+  margin-bottom: 20px;
+}
+.summary-stat {
+  text-align: center;
+}
+.summary-stat .number {
+  font-size: 32px;
+  font-weight: 700;
+}
+.summary-stat .label {
+  font-size: 13px;
+  opacity: 0.8;
+  margin-top: 4px;
+}
+
+.restart-btn {
+  display: block;
+  width: 100%;
+  padding: 14px;
+  background: white;
+  color: #5b4b9a;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 12px;
+}
+
+@media (max-width: 480px) {
+  .message { max-width: 90%; }
+  .voice-selector { max-width: 140px; }
+}
+</style>
+</head>
+<body>
+
+<div class="progress-bar">
+  <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+</div>
+
+<div class="header">
+  <div class="avatar">👩‍🏫</div>
+  <div class="teacher-info">
+    <div class="teacher-name">安娜老师</div>
+    <div class="teacher-status" id="teacherStatus">在线</div>
+  </div>
+  <div class="voice-selector" id="voiceSelector">
+    <button class="voice-btn active" data-voice="gentle">温柔</button>
+    <button class="voice-btn" data-voice="lively">活泼</button>
+    <button class="voice-btn" data-voice="deep">沉稳</button>
+  </div>
+</div>
+
+<div class="chat-container" id="chatContainer">
+  <!-- 消息会动态添加到这里 -->
+</div>
+
+<div class="input-area">
+  <textarea class="input-box" id="inputBox" placeholder="输入你的回答..." rows="1"></textarea>
+  <button class="send-btn" id="sendBtn" onclick="sendMessage()">➤</button>
+</div>
+
+<script src="wordbank.js"></script>
+<script>
+// ========== 全局状态 ==========
+let studentName = localStorage.getItem('studentName') || '同学';
+let selectedGrade = localStorage.getItem('selectedGrade') || '3年级';
+let selectedTextbook = localStorage.getItem('selectedTextbook') || '人教PEP';
+let trialCode = localStorage.getItem('currentTrialCode') || '';
+let isTrialMode = localStorage.getItem('isTrialMode') === 'true';
+
+let currentVoice = 'gentle';
+let wordList = [];
+let currentWordIndex = 0;
+let correctCount = 0;
+let wrongCount = 0;
+let conversationState = 'greeting'; // greeting, intro, learning, question, feedback, summary
+let currentQuestionType = '';
+let isProcessing = false;
+
+// ========== 初始化 ==========
+window.addEventListener('load', function() {
+  // 获取单词列表
+  const bank = WORD_BANK[selectedGrade] || WORD_BANK['3年级'] || [];
+  wordList = isTrialMode ? bank.slice(0, 15) : bank.slice(0, 20);
+  
+  // 打乱顺序
+  wordList = shuffleArray([...wordList]);
+  
+  // 绑定事件
+  document.getElementById('inputBox').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  });
+  
+  // 自动调整输入框高度
+  document.getElementById('inputBox').addEventListener('input', function() {
+    this.style.height = 'auto';
+    this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+  });
+  
+  // 音色选择
+  document.querySelectorAll('.voice-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('.voice-btn').forEach(b => b.classList.remove('active'));
+      this.classList.add('active');
+      currentVoice = this.dataset.voice;
+    });
+  });
+  
+  // 开始对话
+  setTimeout(startConversation, 500);
+});
+
+// ========== 工具函数 ==========
+function shuffleArray(array) {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+  return array;
+}
+
+function scrollToBottom() {
+  const container = document.getElementById('chatContainer');
+  setTimeout(() => {
+    container.scrollTop = container.scrollHeight;
+  }, 100);
+}
+
+function updateProgress() {
+  const progress = wordList.length > 0 ? (currentWordIndex / wordList.length) * 100 : 0;
+  document.getElementById('progressFill').style.width = progress + '%';
+}
+
+// ========== 语音合成 ==========
+function speak(text, opts = {}) {
+  if (!('speechSynthesis' in window)) return;
+  
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = 'en-US';
+  utterance.rate = opts.rate || (currentVoice === 'gentle' ? 0.85 : currentVoice === 'lively' ? 1.0 : 0.9);
+  utterance.pitch = opts.pitch || (currentVoice === 'gentle' ? 1.0 : currentVoice === 'lively' ? 1.2 : 0.9);
+  utterance.volume = 0.8;
+  
+  // 尝试选择英语语音
+  const voices = speechSynthesis.getVoices();
+  const englishVoice = voices.find(v => v.lang.startsWith('en'));
+  if (englishVoice) utterance.voice = englishVoice;
+  
+  speechSynthesis.speak(utterance);
+}
+
+// ========== 消息显示 ==========
+function addTeacherMessage(html, options = {}) {
+  const container = document.getElementById('chatContainer');
+  const msgDiv = document.createElement('div');
+  msgDiv.className = 'message teacher';
+  msgDiv.innerHTML = `
+    <div class="message-avatar">👩‍🏫</div>
+    <div class="message-bubble">${html}</div>
+  `;
+  container.appendChild(msgDiv);
+  scrollToBottom();
+  return msgDiv;
+}
+
+function addStudentMessage(text) {
+  const container = document.getElementById('chatContainer');
+  const msgDiv = document.createElement('div');
+  msgDiv.className = 'message student';
+  msgDiv.innerHTML = `
+    <div class="message-avatar">👦</div>
+    <div class="message-bubble">${text}</div>
+  `;
+  container.appendChild(msgDiv);
+  scrollToBottom();
+  return msgDiv;
+}
+
+function showTyping() {
+  const container = document.getElementById('chatContainer');
+  const typingDiv = document.createElement('div');
+  typingDiv.className = 'message teacher';
+  typingDiv.id = 'typingIndicator';
+  typingDiv.innerHTML = `
+    <div class="message-avatar">👩‍🏫</div>
+    <div class="message-bubble">
+      <div class="typing-indicator">
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+      </div>
+    </div>
+  `;
+  container.appendChild(typingDiv);
+  scrollToBottom();
+}
+
+function hideTyping() {
+  const typing = document.getElementById('typingIndicator');
+  if (typing) typing.remove();
+}
+
+// ========== 对话逻辑 ==========
+function startConversation() {
+  showTyping();
+  document.getElementById('teacherStatus').textContent = '正在输入...';
+  
+  setTimeout(() => {
+    hideTyping();
+    document.getElementById('teacherStatus').textContent = '在线';
+    
+    const greeting = `
+      <div>嗨，${studentName}！👋</div>
+      <div style="margin-top: 8px;">我是安娜老师，今天我们一起来学习英语单词吧！</div>
+      <div style="margin-top: 8px;">今天我们要学习 <strong>${wordList.length}</strong> 个单词，准备好了吗？</div>
+      <div class="options">
+        <button class="option-btn" onclick="startLearning()">准备好了！</button>
+        <button class="option-btn" onclick="startLearning()">开始吧 🚀</button>
+      </div>
+    `;
+    addTeacherMessage(greeting);
+    speak(`Hi ${studentName}! I'm Teacher Anna. Let's learn some English words today!`);
+    conversationState = 'intro';
+  }, 1000);
+}
+
+function startLearning() {
+  currentWordIndex = 0;
+  correctCount = 0;
+  wrongCount = 0;
+  teachNextWord();
+}
+
+function teachNextWord() {
+  if (currentWordIndex >= wordList.length) {
+    showSummary();
+    return;
+  }
+  
+  updateProgress();
+  const word = wordList[currentWordIndex];
+  conversationState = 'learning';
+  
+  showTyping();
+  document.getElementById('teacherStatus').textContent = '正在输入...';
+  
+  setTimeout(() => {
+    hideTyping();
+    document.getElementById('teacherStatus').textContent = '在线';
+    
+    const wordHtml = `
+      <div>我们来学习第 ${currentWordIndex + 1} 个单词：</div>
+      <span class="word">${word.word}</span>
+      <span class="phonetic">${word.phonetic}</span>
+      <div class="meaning">${word.meaning}</div>
+      <button class="play-btn" onclick="speak('${word.word.replace(/'/g, "\\'")}')">🔊 听发音</button>
+      <div class="example">
+        ${word.example}
+        <div class="example-zh">${word.exampleZh}</div>
+      </div>
+      <div class="options">
+        <button class="option-btn" onclick="askQuestion('meaning')">我记住了 ✓</button>
+        <button class="option-btn" onclick="speak('${word.word.replace(/'/g, "\\'")} + ' + '${word.example.replace(/'/g, "\\'")}')">🔊 再听一遍</button>
+      </div>
+    `;
+    addTeacherMessage(wordHtml);
+    speak(word.word + '. ' + word.example);
+  }, 800);
+}
+
+function askQuestion(type) {
+  const word = wordList[currentWordIndex];
+  currentQuestionType = type;
+  conversationState = 'question';
+  
+  showTyping();
+  document.getElementById('teacherStatus').textContent = '正在输入...';
+  
+  setTimeout(() => {
+    hideTyping();
+    document.getElementById('teacherStatus').textContent = '在线';
+    
+    if (type === 'meaning') {
+      // 考意思：给单词，选中文意思
+      const options = generateMeaningOptions(word);
+      let optionsHtml = '<div class="options">';
+      options.forEach(opt => {
+        optionsHtml += `<button class="option-btn" onclick="checkAnswer('${opt.replace(/'/g, "\\'")}')">${opt}</button>`;
+      });
+      optionsHtml += '</div>';
+      
+      const qHtml = `
+        <div>好的，来考考你！</div>
+        <div style="margin-top: 8px; font-size: 20px; font-weight: 600; color: #5b4b9a;">${word.word}</div>
+        <div style="margin-top: 8px;">这个单词是什么意思？</div>
+        ${optionsHtml}
+      `;
+      addTeacherMessage(qHtml);
+      speak(`What does ${word.word} mean?`);
+    } else if (type === 'word') {
+      // 考单词：给意思，写单词
+      const qHtml = `
+        <div>好的，你来拼一拼！</div>
+        <div style="margin-top: 8px;">"<strong>${word.meaning}</strong>" 用英语怎么说？</div>
+        <div style="margin-top: 8px; color: #888; font-size: 13px;">请在输入框中拼写这个单词</div>
+      `;
+      addTeacherMessage(qHtml);
+      speak(`How do you say ${word.meaning} in English?`);
+    }
+  }, 600);
+}
+
+function generateMeaningOptions(correctWord) {
+  const options = [correctWord.meaning];
+  const allWords = wordList.filter(w => w.meaning !== correctWord.meaning);
+  
+  // 随机选3个错误选项
+  const shuffled = shuffleArray([...allWords]);
+  for (let i = 0; i < Math.min(3, shuffled.length); i++) {
+    options.push(shuffled[i].meaning);
+  }
+  
+  return shuffleArray(options);
+}
+
+function checkAnswer(answer) {
+  if (isProcessing) return;
+  isProcessing = true;
+  
+  const word = wordList[currentWordIndex];
+  let isCorrect = false;
+  
+  if (currentQuestionType === 'meaning') {
+    isCorrect = answer === word.meaning;
+  } else if (currentQuestionType === 'word') {
+    isCorrect = answer.toLowerCase().trim() === word.word.toLowerCase();
+  }
+  
+  // 显示学生答案
+  addStudentMessage(answer);
+  
+  // 高亮选项
+  if (currentQuestionType === 'meaning') {
+    const optionBtns = document.querySelectorAll('.option-btn');
+    optionBtns.forEach(btn => {
+      btn.disabled = true;
+      if (btn.textContent === word.meaning) {
+        btn.classList.add('correct');
+      } else if (btn.textContent === answer && !isCorrect) {
+        btn.classList.add('wrong');
+      }
+    });
+  }
+  
+  setTimeout(() => {
+    showTyping();
+    document.getElementById('teacherStatus').textContent = '正在输入...';
+    
+    setTimeout(() => {
+      hideTyping();
+      document.getElementById('teacherStatus').textContent = '在线';
+      
+      if (isCorrect) {
+        correctCount++;
+        const encouragements = [
+          '太棒了！回答正确！🎉',
+          '非常好！你答对了！⭐',
+          '真厉害！完全正确！👏',
+          'Perfect！你太棒了！🌟'
+        ];
+        const feedback = encouragements[Math.floor(Math.random() * encouragements.length)];
+        addTeacherMessage(`<div>${feedback}</div><div style="margin-top: 8px;">"<strong>${word.word}</strong>" 的意思就是 "${word.meaning}"</div>`);
+        speak("Correct! Great job!");
+      } else {
+        wrongCount++;
+        addTeacherMessage(`
+          <div>哎呀，不对哦 😅</div>
+          <div style="margin-top: 8px;">正确答案是：<strong>${word.word}</strong></div>
+          <div style="margin-top: 4px;">意思是：${word.meaning}</div>
+          <div style="margin-top: 8px; font-size: 13px; color: #888;">没关系，多练习几遍就记住了！</div>
+        `);
+        speak(`Oops, that's not right. The correct answer is ${word.word}. It means ${word.meaning}.`);
+      }
+      
+      // 上报学习记录
+      reportStudyRecord(word, isCorrect);
+      
+      // 继续下一个单词
+      currentWordIndex++;
+      conversationState = 'feedback';
+      
+      setTimeout(() => {
+        isProcessing = false;
+        
+        // 显示继续按钮
+        const container = document.getElementById('chatContainer');
+        const continueDiv = document.createElement('div');
+        continueDiv.className = 'message teacher';
+        continueDiv.innerHTML = `
+          <div class="message-avatar">👩‍🏫</div>
+          <div class="message-bubble">
+            <div class="options">
+              <button class="option-btn" onclick="teachNextWord()">下一个单词 →</button>
+            </div>
+          </div>
+        `;
+        container.appendChild(continueDiv);
+        scrollToBottom();
+      }, 1500);
+    }, 1000);
+  }, 500);
+}
+
+function sendMessage() {
+  const input = document.getElementById('inputBox');
+  const text = input.value.trim();
+  
+  if (!text || isProcessing) return;
+  
+  // 如果是在考单词拼写
+  if (conversationState === 'question' && currentQuestionType === 'word') {
+    input.value = '';
+    input.style.height = 'auto';
+    checkAnswer(text);
+    return;
+  }
+  
+  // 自由对话（简单回应）
+  addStudentMessage(text);
+  input.value = '';
+  input.style.height = 'auto';
+  
+  showTyping();
+  document.getElementById('teacherStatus').textContent = '正在输入...';
+  
+  setTimeout(() => {
+    hideTyping();
+    document.getElementById('teacherStatus').textContent = '在线';
+    
+    // 简单的自由对话回应
+    const responses = [
+      '嗯嗯，我听到了！我们继续学习单词吧~',
+      '好的！我们来学习下一个单词。',
+      '哈哈，真有趣！不过我们还是先学单词吧 😊',
+      '你说得对！英语学习需要多练习~',
+      '好棒！继续加油哦！'
+    ];
+    const response = responses[Math.floor(Math.random() * responses.length)];
+    addTeacherMessage(response);
+    
+    // 如果处于学习状态，显示继续按钮
+    if (conversationState === 'learning' || conversationState === 'feedback') {
+      const container = document.getElementById('chatContainer');
+      const continueDiv = document.createElement('div');
+      continueDiv.className = 'message teacher';
+      continueDiv.innerHTML = `
+        <div class="message-avatar">👩‍🏫</div>
+        <div class="message-bubble">
+          <div class="options">
+            <button class="option-btn" onclick="teachNextWord()">继续学习 →</button>
+          </div>
+        </div>
+      `;
+      container.appendChild(continueDiv);
+      scrollToBottom();
+    }
+  }, 800);
+}
+
+function showSummary() {
+  updateProgress();
+  conversationState = 'summary';
+  
+  const total = wordList.length;
+  const rate = total > 0 ? Math.round((correctCount / total) * 100) : 0;
+  
+  showTyping();
+  document.getElementById('teacherStatus').textContent = '正在输入...';
+  
+  setTimeout(() => {
+    hideTyping();
+    document.getElementById('teacherStatus').textContent = '在线';
+    
+    const summaryHtml = `
+      <div class="summary-card">
+        <h2>🎉 学习完成！</h2>
+        <div class="summary-stats">
+          <div class="summary-stat">
+            <div class="number">${total}</div>
+            <div class="label">学习单词</div>
+          </div>
+          <div class="summary-stat">
+            <div class="number">${correctCount}</div>
+            <div class="label">答对</div>
+          </div>
+          <div class="summary-stat">
+            <div class="number">${rate}%</div>
+            <div class="label">正确率</div>
+          </div>
+        </div>
+        <div style="font-size: 14px; opacity: 0.9;">
+          ${rate >= 80 ? '太棒了！你是英语小达人！🏆' : rate >= 60 ? '不错哦！继续加油会更棒！💪' : '没关系，多练习几次就好了！📚'}
+        </div>
+        <button class="restart-btn" onclick="restartLearning()">再学一遍</button>
+      </div>
+    `;
+    addTeacherMessage(summaryHtml);
+    speak(`Congratulations! You learned ${total} words today. You got ${correctCount} correct. Great job!`);
+  }, 1200);
+}
+
+function restartLearning() {
+  wordList = shuffleArray([...wordList]);
+  currentWordIndex = 0;
+  correctCount = 0;
+  wrongCount = 0;
+  teachNextWord();
+}
+
+// ========== 上报学习记录 ==========
+function reportStudyRecord(word, isCorrect) {
+  if (!trialCode) return;
+  
+  try {
+    fetch('/api/study-record', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        trialCode: trialCode,
+        studentName: studentName,
+        word: word.word,
+        isCorrect: isCorrect,
+        mode: 'chat'
+      })
+    }).catch(() => {}); // 静默失败，不影响学习体验
+  } catch (e) {}
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>安娜老师 - AI英语单词学习</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+body { 
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif; 
+  background: linear-gradient(180deg, #f0edff 0%, #ffffff 40%);
+  min-height: 100vh;
+  padding: 20px 16px 40px;
+  color: #333;
+}
+.container {
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+/* 标题区 */
+.header {
+  text-align: center;
+  padding: 30px 0 20px;
+}
+.header h1 {
+  font-size: 28px;
+  color: #5b4b9a;
+  margin-bottom: 8px;
+  font-weight: 700;
+}
+.header p {
+  color: #888;
+  font-size: 14px;
+}
+.teacher-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #7c6cc8 0%, #5b4b9a 100%);
+  margin: 0 auto 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 40px;
+  box-shadow: 0 8px 20px rgba(91, 75, 154, 0.3);
+}
+
+/* 卡片 */
+.card {
+  background: white;
+  border-radius: 20px;
+  padding: 24px 20px;
+  box-shadow: 0 4px 20px rgba(91, 75, 154, 0.08);
+  margin-bottom: 20px;
+}
+
+/* 表单项 */
+.form-item {
+  margin-bottom: 24px;
+}
+.form-item:last-child {
+  margin-bottom: 0;
+}
+.form-label {
+  font-size: 15px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 12px;
+  display: block;
+}
+
+/* 输入框 */
+.name-input {
+  width: 100%;
+  height: 48px;
+  padding: 0 16px;
+  border: 2px solid #e8e8e8;
+  border-radius: 12px;
+  font-size: 16px;
+  transition: all 0.3s;
+  background: #fafafa;
+}
+.name-input:focus {
+  outline: none;
+  border-color: #7c6cc8;
+  background: white;
+}
+
+/* 选项网格 */
+.grade-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+.textbook-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+.option-btn {
+  height: 44px;
+  border: 2px solid #e8e8e8;
+  border-radius: 10px;
+  background: white;
+  font-size: 14px;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 500;
+}
+.option-btn:hover {
+  border-color: #c5b8e8;
+  background: #f8f6ff;
+}
+.option-btn.active {
+  background: linear-gradient(135deg, #7c6cc8 0%, #5b4b9a 100%);
+  color: white;
+  border-color: #5b4b9a;
+  box-shadow: 0 4px 12px rgba(91, 75, 154, 0.3);
+}
+
+/* 按钮组 */
+.btn-group {
+  margin-top: 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.btn-primary {
+  width: 100%;
+  height: 52px;
+  border: none;
+  border-radius: 14px;
+  font-size: 17px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.btn-purple {
+  background: linear-gradient(135deg, #7c6cc8 0%, #5b4b9a 100%);
+  color: white;
+  box-shadow: 0 6px 16px rgba(91, 75, 154, 0.3);
+}
+.btn-purple:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(91, 75, 154, 0.4);
+}
+.btn-purple:active {
+  transform: translateY(0);
+}
+.btn-orange {
+  background: linear-gradient(135deg, #ff9a56 0%, #ff7b29 100%);
+  color: white;
+  box-shadow: 0 6px 16px rgba(255, 123, 41, 0.3);
+}
+.btn-orange:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(255, 123, 41, 0.4);
+}
+.btn-orange:active {
+  transform: translateY(0);
+}
+
+/* 弹窗遮罩 */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+.modal-overlay.show {
+  display: flex;
+}
+.modal {
+  background: white;
+  border-radius: 20px;
+  padding: 30px 24px;
+  width: 100%;
+  max-width: 360px;
+  text-align: center;
+  animation: modalIn 0.3s ease;
+}
+@keyframes modalIn {
+  from { transform: scale(0.9); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+.modal h3 {
+  font-size: 20px;
+  color: #333;
+  margin-bottom: 8px;
+}
+.modal p {
+  color: #888;
+  font-size: 14px;
+  margin-bottom: 20px;
+}
+.modal .gift-icon {
+  font-size: 48px;
+  margin-bottom: 10px;
+}
+.modal-input {
+  width: 100%;
+  height: 48px;
+  padding: 0 16px;
+  border: 2px solid #e8e8e8;
+  border-radius: 12px;
+  font-size: 16px;
+  margin-bottom: 16px;
+  text-align: center;
+  letter-spacing: 2px;
+}
+.modal-input:focus {
+  outline: none;
+  border-color: #ff7b29;
+}
+.modal-btn {
+  width: 100%;
+  height: 48px;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  background: linear-gradient(135deg, #ff9a56 0%, #ff7b29 100%);
+  color: white;
+  margin-bottom: 10px;
+}
+.modal-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.modal-close {
+  background: none;
+  border: none;
+  color: #999;
+  font-size: 14px;
+  cursor: pointer;
+}
+.modal-error {
+  color: #ff4757;
+  font-size: 13px;
+  margin-bottom: 12px;
+  min-height: 18px;
+}
+
+/* 底部说明 */
+.footer {
+  text-align: center;
+  color: #aaa;
+  font-size: 12px;
+  margin-top: 30px;
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <!-- 标题区 -->
+  <div class="header">
+    <div class="teacher-avatar"><img src="static/logo.jpg" alt="科创繁星学堂" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"></div>
+    <h1>科创繁星AI外教英语</h1>
+    <p>英式多音色外教 · 适配低幼至初高中</p>
+  </div>
+
+  <!-- 主卡片 -->
+  <div class="card">
+    <!-- 姓名 -->
+    <div class="form-item">
+      <label class="form-label">你的名字</label>
+      <input type="text" class="name-input" id="studentName" placeholder="请输入你的名字" maxlength="20">
+    </div>
+
+    <!-- 年级选择 -->
+    <div class="form-item">
+      <label class="form-label">选择年级</label>
+      <div class="grade-grid" id="gradeGrid">
+        <div class="option-btn" data-grade="幼儿">幼儿</div>
+        <div class="option-btn active" data-grade="3年级">3年级</div>
+        <div class="option-btn" data-grade="4年级">4年级</div>
+        <div class="option-btn" data-grade="5年级">5年级</div>
+        <div class="option-btn" data-grade="6年级">6年级</div>
+        <div class="option-btn" data-grade="初一">初一</div>
+        <div class="option-btn" data-grade="初二">初二</div>
+        <div class="option-btn" data-grade="初三">初三</div>
+        <div class="option-btn" data-grade="编程专业英语">编程专业英语</div>
+      </div>
+    </div>
+
+    <!-- 教材选择 -->
+    <div class="form-item">
+      <label class="form-label">选择教材</label>
+      <div class="textbook-grid" id="textbookGrid">
+        <div class="option-btn active" data-textbook="人教PEP">人教PEP</div>
+        <div class="option-btn" data-textbook="人教精通">人教精通</div>
+        <div class="option-btn" data-textbook="外研版">外研版</div>
+        <div class="option-btn" data-textbook="北师大版">北师大版</div>
+        <div class="option-btn" data-textbook="译林版">译林版</div>
+        <div class="option-btn" data-textbook="全国通用">全国通用</div>
+      </div>
+    </div>
+
+    <!-- 按钮组 -->
+    <div class="btn-group">
+      <button class="btn-primary btn-orange" onclick="showTrialModal()">
+        🎁 输入体验码，开始学习
+      </button>
+    </div>
+  </div>
+
+  <div class="footer">© 安娜老师 · AI英语单词学习系统</div>
+</div>
+
+<!-- 体验码弹窗 -->
+<div class="modal-overlay" id="trialModal">
+  <div class="modal">
+    <div class="gift-icon">🎁</div>
+    <h3>9.9元体验完整课程</h3>
+    <p>请输入您的体验码</p>
+    <input type="text" class="modal-input" id="trialCodeInput" placeholder="请输入体验码" maxlength="12">
+    <div class="modal-error" id="trialError"></div>
+    <button class="modal-btn" id="trialSubmitBtn" onclick="verifyTrialCode()">开始体验</button>
+    <button class="modal-close" onclick="closeTrialModal()">取消</button>
+  </div>
+</div>
+
+<script>
+// 选中的年级和教材
+let selectedGrade = '3年级';
+let selectedTextbook = '人教PEP';
+
+// 年级选择
+document.getElementById('gradeGrid').addEventListener('click', function(e) {
+  if (e.target.classList.contains('option-btn')) {
+    document.querySelectorAll('#gradeGrid .option-btn').forEach(btn => btn.classList.remove('active'));
+    e.target.classList.add('active');
+    selectedGrade = e.target.dataset.grade;
+  }
+});
+
+// 教材选择
+document.getElementById('textbookGrid').addEventListener('click', function(e) {
+  if (e.target.classList.contains('option-btn')) {
+    document.querySelectorAll('#textbookGrid .option-btn').forEach(btn => btn.classList.remove('active'));
+    e.target.classList.add('active');
+    selectedTextbook = e.target.dataset.textbook;
+  }
+});
+
+// 免费测评
+function startFreeTest() {
+  const name = document.getElementById('studentName').value.trim();
+  if (!name) {
+    alert('请先输入你的名字');
+    return;
+  }
+  
+  // 保存设置到 localStorage
+  localStorage.setItem('studentName', name);
+  localStorage.setItem('selectedGrade', selectedGrade);
+  localStorage.setItem('selectedTextbook', selectedTextbook);
+  localStorage.setItem('isTrialMode', 'false'); // 免费测评模式
+  
+  // 跳转到学习页
+  window.location.href = '/trial.html';
+}
+
+// 显示体验码弹窗
+function showTrialModal() {
+  const name = document.getElementById('studentName').value.trim();
+  if (!name) {
+    alert('请先输入你的名字');
+    return;
+  }
+  
+  document.getElementById('trialModal').classList.add('show');
+  document.getElementById('trialCodeInput').focus();
+  document.getElementById('trialError').textContent = '';
+}
+
+// 关闭弹窗
+function closeTrialModal() {
+  document.getElementById('trialModal').classList.remove('show');
+}
+
+// 验证体验码
+function verifyTrialCode() {
+  const code = document.getElementById('trialCodeInput').value.trim().toUpperCase();
+  const name = document.getElementById('studentName').value.trim();
+  const btn = document.getElementById('trialSubmitBtn');
+  const err = document.getElementById('trialError');
+  
+  if (!code) {
+    err.textContent = '请输入体验码';
+    return;
+  }
+  
+  btn.disabled = true;
+  btn.textContent = '验证中...';
+  err.textContent = '';
+  
+  fetch('/api/verify-code', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ code: code })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(d) {
+    if (d.valid) {
+      // 保存信息
+      localStorage.setItem('studentName', name);
+      localStorage.setItem('selectedGrade', selectedGrade);
+      localStorage.setItem('selectedTextbook', selectedTextbook);
+      localStorage.setItem('currentTrialCode', code);
+      localStorage.setItem('trialStudentName', name);
+      localStorage.setItem('isTrialMode', 'true');
+      
+      // 跳转到学习页
+      window.location.href = '/trial.html';
+    } else {
+      err.textContent = d.message || '体验码无效';
+      btn.disabled = false;
+      btn.textContent = '开始体验';
+    }
+  })
+  .catch(function() {
+    err.textContent = '网络错误，请稍后重试';
+    btn.disabled = false;
+    btn.textContent = '开始体验';
+  });
+}
+
+// 回车提交
+document.getElementById('trialCodeInput').addEventListener('keypress', function(e) {
+  if (e.key === 'Enter') verifyTrialCode();
+});
+
+// 点击遮罩关闭
+document.getElementById('trialModal').addEventListener('click', function(e) {
+  if (e.target === this) closeTrialModal();
+});
+
+// 页面加载时回显上次的设置
+window.addEventListener('load', function() {
+  const savedName = localStorage.getItem('studentName');
+  const savedGrade = localStorage.getItem('selectedGrade');
+  const savedTextbook = localStorage.getItem('selectedTextbook');
+  
+  if (savedName) {
+    document.getElementById('studentName').value = savedName;
+  }
+  if (savedGrade) {
+    selectedGrade = savedGrade;
+    document.querySelectorAll('#gradeGrid .option-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.grade === savedGrade);
+    });
+  }
+  if (savedTextbook) {
+    selectedTextbook = savedTextbook;
+    document.querySelectorAll('#textbookGrid .option-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.textbook === savedTextbook);
+    });
+  }
+});
+</script>
+</body>
+</html>
