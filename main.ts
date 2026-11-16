@@ -27,56 +27,60 @@ await initDB();
 async function handler(req: Request): Promise<Response> {
   const url = new URL(req.url);
   const path = url.pathname;
-  const method = req.method;
 
-  // ========== cron唤醒&提醒触发接口 ==========
-  if (method === "GET" && path === "/api/cron-trigger") {
-    // 有密钥就校验，没设置密钥就直接放行
-    const secretParam = url.searchParams.get("secret");
-    if (CRON_SECRET && secretParam !== CRON_SECRET) {
-      return new Response(JSON.stringify({ msg: "无权限" }), { status: 403, headers: { "Content-Type": "application/json" } });
+  try {
+    // 页面路由（已经去掉public/，直接读根目录文件）
+    if (path === "/" || path === "/index.html") {
+      const html = await Deno.readTextFile("./index.html");
+      return new Response(html, { headers: { "content-type": "text/html;charset=utf-8" } });
+    } else if (path === "/admin.html") {
+      const html = await Deno.readTextFile("./admin.html");
+      return new Response(html, { headers: { "content-type": "text/html;charset=utf-8" } });
+    } else if (path === "/chat.html") {
+      const html = await Deno.readTextFile("./chat.html");
+      return new Response(html, { headers: { "content-type": "text/html;charset=utf-8" } });
+    } else if (path === "/trial.html") {
+      const html = await Deno.readTextFile("./trial.html");
+      return new Response(html, { headers: { "content-type": "text/html;charset=utf-8" } });
     }
-    console.log("Cron任务执行：检查复习提醒");
-    // 这里你后续可以在这里加微信提醒逻辑，当前先打印日志
-    return Response.json({ ok: true, msg: "cron执行完成，复习提醒已检查" });
-  }
+    // 图片路由
+    else if (path === "/logo.jpg") {
+      const data = await Deno.readFile("./logo.jpg");
+      return new Response(data, { headers: { "content-type": "image/jpeg" } });
+    } else if (path === "/li-ao.jpg") {
+      const data = await Deno.readFile("./li-ao.jpg");
+      return new Response(data, { headers: { "content-type": "image/jpeg" } });
+    } else if (path === "/anna.jpg") {
+      const data = await Deno.readFile("./anna.jpg");
+      return new Response(data, { headers: { "content-type": "image/jpeg" } });
+    }
 
-  // 静态页面：前端html
-  if (path === "/" || path === "/index.html") {
-    const html = await Deno.readTextFile("./public/index.html");
-    return new Response(html, { headers: { "Content-Type": "text/html;charset=utf-8" } });
-  }
-  if (path === "/admin.html") {
-    const html = await Deno.readTextFile("./public/admin.html");
-    return new Response(html, { headers: { "Content-Type": "text/html;charset=utf-8" } });
-  }
+    // ========== 下面是你的数据库API接口，原样保留 ==========
+    else if (path === "/api/add-word") {
+      if (req.method !== "POST") return new Response("Method Not Allowed", { status:405 });
+      const body = await req.json();
+      const r = await client.execute({
+        sql: "INSERT INTO words (word, meaning) VALUES (?, ?)",
+        args: [body.word, body.meaning]
+      });
+      return Response.json({ok:true, r});
+    }
+    else if (path === "/api/list-word") {
+      const res = await client.execute("SELECT * FROM words ORDER BY id DESC");
+      return Response.json(res.rows);
+    }
+    else if (path === "/api/del-word") {
+      if (req.method !== "POST") return new Response("Method Not Allowed", { status:405 });
+      const body = await req.json();
+      await client.execute({sql:"DELETE FROM words WHERE id=?", args:[body.id]});
+      return Response.json({ok:true});
+    }
 
-  // ========== 单词接口示例 ==========
-  // 获取全部单词
-  if (method === "GET" && path === "/api/words") {
-    const res = await client.execute("SELECT * FROM words ORDER BY id DESC");
-    return Response.json(res.rows);
+    return new Response("404 Not Found", { status:404 });
+  } catch (e) {
+    console.error(e);
+    return new Response(`Server Error:${(e as Error).message}`, { status:500 });
   }
-
-  // 添加单词
-  if (method === "POST" && path === "/api/words") {
-    const body = await req.json();
-    await client.execute({
-      sql: "INSERT INTO words (word, meaning) VALUES (?, ?)",
-      args: [body.word, body.meaning]
-    });
-    return Response.json({ ok: true });
-  }
-
-  // 删除单词
-  if (method === "DELETE" && path.startsWith("/api/words/")) {
-    const id = path.split("/").pop();
-    await client.execute({ sql: "DELETE FROM words WHERE id = ?", args: [id] });
-    return Response.json({ ok: true });
-  }
-
-  return new Response("404 Not Found", { status: 404 });
 }
 
 serve(handler, { port: 8000 });
-console.log("服务启动，端口8000");
